@@ -1,0 +1,20 @@
+{
+  "name": "static-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "static",
+    "server",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "A simple static file server with multi-port support",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
