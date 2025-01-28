@@ -1,0 +1,483 @@
+<!DOCTYPE html><html lang="en"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>"><meta name="generator" content="Astro v5.1.5"><!-- Canonical URL --><link rel="canonical" href="https://astro-micro.vercel.app/blog/00-react/"><!-- Primary Meta Tags --><title>从零实现一个简化版 React | Muliminty Blog.</title><meta name="title" content="从零实现一个简化版 React | Muliminty Blog."><meta name="description" content="从零实现一个简化版 React，深入理解虚拟 DOM、状态管理、组件化开发及 JSX 支持的核心原理。"><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://astro-micro.vercel.app/blog/00-react/"><meta property="og:title" content="从零实现一个简化版 React | Muliminty Blog."><meta property="og:description" content="从零实现一个简化版 React，深入理解虚拟 DOM、状态管理、组件化开发及 JSX 支持的核心原理。"><meta property="og:image" content="https://astro-micro.vercel.app/blog-placeholder-1.jpg"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://astro-micro.vercel.app/blog/00-react/"><meta property="twitter:title" content="从零实现一个简化版 React | Muliminty Blog."><meta property="twitter:description" content="从零实现一个简化版 React，深入理解虚拟 DOM、状态管理、组件化开发及 JSX 支持的核心原理。"><meta property="twitter:image" content="https://astro-micro.vercel.app/blog-placeholder-1.jpg"><!-- PageFind --><link href="/pagefind/pagefind-ui.css" rel="stylesheet"><script src="/pagefind/pagefind-ui.js"></script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BScVxmeO.js"></script><script>
+  function init() {
+    preloadTheme();
+    onScroll();
+    animate();
+    updateThemeButtons();
+    addCopyCodeButtons();
+    setGiscusTheme();
+
+    const backToTop = document.getElementById("back-to-top");
+    backToTop?.addEventListener("click", (event) => scrollToTop(event));
+
+    const backToPrev = document.getElementById("back-to-prev");
+    backToPrev?.addEventListener("click", () => window.history.back());
+
+    const lightThemeButton = document.getElementById("light-theme-button");
+    lightThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "light");
+      toggleTheme(false);
+      updateThemeButtons();
+    });
+
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    darkThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "dark");
+      toggleTheme(true);
+      updateThemeButtons();
+    });
+
+    const systemThemeButton = document.getElementById("system-theme-button");
+    systemThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "system");
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      updateThemeButtons();
+    });
+
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (event) => {
+        if (localStorage.theme === "system") {
+          toggleTheme(event.matches);
+        }
+      });
+
+    document.addEventListener("scroll", onScroll);
+  }
+
+  function updateThemeButtons() {
+    const theme = localStorage.getItem("theme");
+    const lightThemeButton = document.getElementById("light-theme-button");
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    const systemThemeButton = document.getElementById("system-theme-button");
+
+    function removeActiveButtonTheme(button) {
+      button?.classList.remove("bg-black/5");
+      button?.classList.remove("dark:bg-white/5");
+    }
+
+    function addActiveButtonTheme(button) {
+      button?.classList.add("bg-black/5");
+      button?.classList.add("dark:bg-white/5");
+    }
+
+    removeActiveButtonTheme(lightThemeButton);
+    removeActiveButtonTheme(darkThemeButton);
+    removeActiveButtonTheme(systemThemeButton);
+
+    if (theme === "light") {
+      addActiveButtonTheme(lightThemeButton);
+    } else if (theme === "dark") {
+      addActiveButtonTheme(darkThemeButton);
+    } else {
+      addActiveButtonTheme(systemThemeButton);
+    }
+  }
+
+  function animate() {
+    const animateElements = document.querySelectorAll(".animate");
+
+    animateElements.forEach((element, index) => {
+      setTimeout(() => {
+        element.classList.add("show");
+      }, index * 100);
+    });
+  }
+
+  function onScroll() {
+    if (window.scrollY > 0) {
+      document.documentElement.classList.add("scrolled");
+    } else {
+      document.documentElement.classList.remove("scrolled");
+    }
+  }
+
+  function scrollToTop(event) {
+    event.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function toggleTheme(dark) {
+    const css = document.createElement("style");
+
+    css.appendChild(
+      document.createTextNode(
+        `* {
+             -webkit-transition: none !important;
+             -moz-transition: none !important;
+             -o-transition: none !important;
+             -ms-transition: none !important;
+             transition: none !important;
+          }
+        `
+      )
+    );
+
+    document.head.appendChild(css);
+
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    window.getComputedStyle(css).opacity;
+    document.head.removeChild(css);
+
+    setGiscusTheme();
+  }
+
+  function preloadTheme() {
+    const userTheme = localStorage.theme;
+
+    if (userTheme === "light" || userTheme === "dark") {
+      toggleTheme(userTheme === "dark");
+    } else {
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+  }
+
+  function addCopyCodeButtons() {
+    let copyButtonLabel = "📋";
+    let codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    async function copyCode(codeBlock, copyButton) {
+      const codeText = codeBlock.innerText;
+      const buttonText = copyButton.innerText;
+      const textToCopy = codeText.replace(buttonText, "");
+
+      await navigator.clipboard.writeText(textToCopy);
+      copyButton.innerText = "✅";
+
+      setTimeout(() => {
+        copyButton.innerText = copyButtonLabel;
+      }, 2000);
+    }
+
+    for (let codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const copyButton = document.createElement("button");
+      copyButton.innerText = copyButtonLabel;
+      copyButton.classList = "copy-code";
+
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock.parentNode.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton?.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+  }
+
+  const setGiscusTheme = () => {
+    const giscus = document.querySelector(".giscus-frame");
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    if (giscus) {
+      const url = new URL(giscus.src);
+      url.searchParams.set("theme", isDark ? "dark" : "light");
+      giscus.src = url.toString();
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", () => init());
+  document.addEventListener("astro:after-swap", () => init());
+  preloadTheme();
+</script><link rel="stylesheet" href="/_astro/_id_.D8mQGJwG.css">
+<style>summary[data-astro-cid-xvrfupwn]{cursor:pointer;border-top-left-radius:.5rem;border-top-right-radius:.5rem;padding:.375rem .75rem;font-weight:500;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}summary[data-astro-cid-xvrfupwn]:hover{background-color:#0000000d}summary[data-astro-cid-xvrfupwn]:hover:is(.dark *){background-color:#ffffff0d}details[data-astro-cid-xvrfupwn][open] summary[data-astro-cid-xvrfupwn]{background-color:#0000000d}details[data-astro-cid-xvrfupwn][open] summary[data-astro-cid-xvrfupwn]:is(.dark *){background-color:#ffffff0d}
+</style></head> <body> <header data-astro-transition-persist="astro-l7r54iwe-1"> <div class="mx-auto max-w-screen-sm px-3"> <div class="flex flex-wrap justify-between gap-y-2"> <a href="/" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out">  <div class="font-semibold"> Muliminty Blog.&nbsp;🔬
+</div>  </a> <nav class="flex items-center gap-1 text-sm"> <a href="/blog" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> blog </a> <span> <!-- {`/`} --> </span> <!-- <Link href="/projects">projects</Link> --> <span> / </span> <button id="magnifying-glass" aria-label="Search" class="flex items-center rounded border border-black/15 bg-neutral-100 px-2 py-1 text-xs transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:bg-neutral-900 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 7C3.5 5.067 5.067 3.5 7 3.5C8.933 3.5 10.5 5.067 10.5 7C10.5 7.88461 10.1718 8.69256 9.63058 9.30876L9.30876 9.63058C8.69256 10.1718 7.88461 10.5 7 10.5C5.067 10.5 3.5 8.933 3.5 7ZM9.96544 11.0261C9.13578 11.6382 8.11014 12 7 12C4.23858 12 2 9.76142 2 7C2 4.23858 4.23858 2 7 2C9.76142 2 12 4.23858 12 7C12 8.11014 11.6382 9.13578 11.0261 9.96544L14.0303 12.9697L14.5607 13.5L13.5 14.5607L12.9697 14.0303L9.96544 11.0261Z" fill="currentColor"></path></svg>
+&nbsp;Search
+</button> </nav> </div> </div> </header> <main>  <div class="mx-auto max-w-screen-sm px-3"> <div class="animate"> <a href="/blog" class="not-prose group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-7 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm"> Back to blog </div> </a> </div> <div class="my-10 space-y-1"> <div class="animate flex items-center gap-1.5"> <div class="font-base text-sm"> <time datetime="2025-01-21T00:00:00.000Z"> 2025年1月21日 </time> </div>
+&bull;
+<div class="font-base text-sm"> 3 分钟阅读 </div> </div> <h1 class="animate text-3xl font-semibold text-black dark:text-white"> 从零实现一个简化版 React </h1> <div class="animate flex gap-2 pt-1"> <a href="/tags/react" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> react </a><a href="/tags/javascript" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> javascript </a><a href="/tags/源码" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> 源码 </a> </div> </div> <details open class="animate rounded-lg border border-black/15 dark:border-white/20" data-astro-cid-xvrfupwn> <summary data-astro-cid-xvrfupwn>Table of Contents</summary> <nav class="" data-astro-cid-xvrfupwn> <ul class="py-3" data-astro-cid-xvrfupwn> <li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#从零实现一个简化版-react" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 从零实现一个简化版 React </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#1-为什么选择实现一个简化版-react" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 1. 为什么选择实现一个简化版 React？ </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#2-实现过程与心路历程" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2. 实现过程与心路历程 </a> <ul class="translate-x-3"> <li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#21-虚拟-dom-的创建" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.1 虚拟 DOM 的创建 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#22-虚拟-dom-的渲染" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.2 虚拟 DOM 的渲染 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#23-状态管理" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.3 状态管理 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#24-支持-jsx-语法" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.4 支持 JSX 语法 </a>  </li> </ul> </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#3-最终成果" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 3. 最终成果 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#4-总结与收获" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 4. 总结与收获 </a>  </li> </ul> </nav> </details> <article class="animate"> <hr/>
+<h2 id="从零实现一个简化版-react">从零实现一个简化版 React</h2>
+<p>最近，我尝试从零实现一个简化版的 React 框架，目的是深入理解 React 的核心原理，包括虚拟 DOM、状态管理、组件化开发以及 JSX 的支持。</p>
+<h2 id="1-为什么选择实现一个简化版-react"><strong>1. 为什么选择实现一个简化版 React？</strong></h2>
+<p>React 是现代前端开发中最流行的框架之一，其核心思想包括虚拟 DOM、组件化开发、状态管理等。尽管我已经使用 React 开发了多个项目，但我对其底层原理的理解仍然不够深入。为了彻底掌握 React 的工作原理，我决定从零实现一个简化版的 React。</p>
+<p>我的目标包括：</p>
+<ul>
+<li>理解虚拟 DOM 的创建和渲染过程。</li>
+<li>实现状态管理（如 <code>useState</code>）。</li>
+<li>支持 JSX 语法。</li>
+<li>实现组件化开发。</li>
+</ul>
+<hr/>
+<h2 id="2-实现过程与心路历程"><strong>2. 实现过程与心路历程</strong></h2>
+<h3 id="21-虚拟-dom-的创建"><strong>2.1 虚拟 DOM 的创建</strong></h3>
+<p>虚拟 DOM 是 React 的核心概念之一。它是一个轻量级的 JavaScript 对象，用于描述真实 DOM 的结构。我的第一步是实现虚拟 DOM 的创建。</p>
+<p><strong>实现思路</strong>：</p>
+<ul>
+<li>定义一个 <code>createElement</code> 函数，用于创建虚拟 DOM 元素。</li>
+<li>支持文本节点的创建，通过 <code>createTextElement</code> 函数将文本转换为虚拟 DOM。</li>
+</ul>
+<p><strong>代码实现</strong>：</p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> createElement</span><span style="color:var(--astro-code-foreground)">(type</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> props</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-keyword)"> ...</span><span style="color:var(--astro-code-foreground)">children) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    type</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    props</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">      ...</span><span style="color:var(--astro-code-foreground)">props</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      children</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-token-constant)"> children</span><span style="color:var(--astro-code-token-function)">.map</span><span style="color:var(--astro-code-foreground)">(child </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">        typeof</span><span style="color:var(--astro-code-foreground)"> child </span><span style="color:var(--astro-code-token-keyword)">===</span><span style="color:var(--astro-code-token-string-expression)"> &quot;object&quot;</span><span style="color:var(--astro-code-token-keyword)"> ?</span><span style="color:var(--astro-code-foreground)"> child </span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-token-function)"> createTextElement</span><span style="color:var(--astro-code-foreground)">(child)</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      )</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    }</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  };</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> createTextElement</span><span style="color:var(--astro-code-foreground)">(text) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    type</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-token-string-expression)"> &quot;TEXT_ELEMENT&quot;</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    props</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      nodeValue</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-foreground)"> text</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      children</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-foreground)"> []</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    }</span><span style="color:var(--astro-code-token-punctuation)">,</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  };</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<p><strong>遇到的问题</strong>：</p>
+<ul>
+<li>如何区分普通元素和文本元素？</li>
+<li>如何处理嵌套的子元素？</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>通过 <code>type</code> 字段区分普通元素和文本元素。</li>
+<li>使用递归处理嵌套的子元素。</li>
+</ul>
+<hr/>
+<h3 id="22-虚拟-dom-的渲染"><strong>2.2 虚拟 DOM 的渲染</strong></h3>
+<p>虚拟 DOM 需要被渲染为真实 DOM 才能显示在页面上。我实现了 <code>ReactDOM.render</code> 函数来完成这一任务。</p>
+<p><strong>实现思路</strong>：</p>
+<ul>
+<li>根据虚拟 DOM 的类型创建真实 DOM 元素。</li>
+<li>处理属性（包括普通属性、<code>style</code> 对象和事件绑定）。</li>
+<li>递归渲染子元素。</li>
+</ul>
+<p><strong>代码实现</strong>：</p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> ReactDOM</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">  render</span><span style="color:var(--astro-code-foreground)">(element</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> container) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">    if</span><span style="color:var(--astro-code-foreground)"> (</span><span style="color:var(--astro-code-token-keyword)">typeof</span><span style="color:var(--astro-code-token-constant)"> element</span><span style="color:var(--astro-code-foreground)">.type </span><span style="color:var(--astro-code-token-keyword)">===</span><span style="color:var(--astro-code-token-string-expression)"> &quot;function&quot;</span><span style="color:var(--astro-code-foreground)">) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">      const</span><span style="color:var(--astro-code-token-constant)"> childElement</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> element</span><span style="color:var(--astro-code-token-function)">.type</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">element</span><span style="color:var(--astro-code-foreground)">.props);</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">      return</span><span style="color:var(--astro-code-token-constant)"> this</span><span style="color:var(--astro-code-token-function)">.render</span><span style="color:var(--astro-code-foreground)">(childElement</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> container);</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">    const</span><span style="color:var(--astro-code-token-constant)"> dom</span><span style="color:var(--astro-code-token-keyword)"> =</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">      element</span><span style="color:var(--astro-code-foreground)">.type </span><span style="color:var(--astro-code-token-keyword)">==</span><span style="color:var(--astro-code-token-string-expression)"> &quot;TEXT_ELEMENT&quot;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">        ?</span><span style="color:var(--astro-code-token-constant)"> document</span><span style="color:var(--astro-code-token-function)">.createTextNode</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">element</span><span style="color:var(--astro-code-foreground)">.</span><span style="color:var(--astro-code-token-constant)">props</span><span style="color:var(--astro-code-foreground)">.nodeValue)</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">        :</span><span style="color:var(--astro-code-token-constant)"> document</span><span style="color:var(--astro-code-token-function)">.createElement</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">element</span><span style="color:var(--astro-code-foreground)">.type);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    Object</span><span style="color:var(--astro-code-token-function)">.keys</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">element</span><span style="color:var(--astro-code-foreground)">.props)</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">      .filter</span><span style="color:var(--astro-code-foreground)">(key </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> key </span><span style="color:var(--astro-code-token-keyword)">!==</span><span style="color:var(--astro-code-token-string-expression)"> &quot;children&quot;</span><span style="color:var(--astro-code-foreground)">)</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">      .forEach</span><span style="color:var(--astro-code-foreground)">(name </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">        if</span><span style="color:var(--astro-code-foreground)"> (name </span><span style="color:var(--astro-code-token-keyword)">===</span><span style="color:var(--astro-code-token-string-expression)"> &#39;style&#39;</span><span style="color:var(--astro-code-foreground)">) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">          const</span><span style="color:var(--astro-code-token-constant)"> style</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> element</span><span style="color:var(--astro-code-foreground)">.props[name];</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">          Object</span><span style="color:var(--astro-code-token-function)">.keys</span><span style="color:var(--astro-code-foreground)">(style)</span><span style="color:var(--astro-code-token-function)">.forEach</span><span style="color:var(--astro-code-foreground)">(styleName </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">            const</span><span style="color:var(--astro-code-token-constant)"> cssName</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> styleName</span><span style="color:var(--astro-code-token-function)">.replace</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">/([A-Z])/</span><span style="color:var(--astro-code-token-keyword)">g</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-string-expression)"> &#39;-$1&#39;</span><span style="color:var(--astro-code-foreground)">)</span><span style="color:var(--astro-code-token-function)">.toLowerCase</span><span style="color:var(--astro-code-foreground)">();</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">            dom</span><span style="color:var(--astro-code-foreground)">.style[cssName] </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)"> style[styleName];</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">          });</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">        } </span><span style="color:var(--astro-code-token-keyword)">else</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">          dom[name] </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> element</span><span style="color:var(--astro-code-foreground)">.props[name];</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">        }</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    Object</span><span style="color:var(--astro-code-token-function)">.keys</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">element</span><span style="color:var(--astro-code-foreground)">.props)</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">      .filter</span><span style="color:var(--astro-code-foreground)">(key </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-constant)"> key</span><span style="color:var(--astro-code-token-function)">.startsWith</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&quot;on&quot;</span><span style="color:var(--astro-code-foreground)">))</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">      .forEach</span><span style="color:var(--astro-code-foreground)">(name </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">        const</span><span style="color:var(--astro-code-token-constant)"> eventType</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> name</span><span style="color:var(--astro-code-token-function)">.toLowerCase</span><span style="color:var(--astro-code-foreground)">()</span><span style="color:var(--astro-code-token-function)">.substring</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">2</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">        dom</span><span style="color:var(--astro-code-token-function)">.addEventListener</span><span style="color:var(--astro-code-foreground)">(eventType</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-constant)"> element</span><span style="color:var(--astro-code-foreground)">.props[name]);</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    element</span><span style="color:var(--astro-code-token-function)">.</span><span style="color:var(--astro-code-token-constant)">props</span><span style="color:var(--astro-code-token-function)">.</span><span style="color:var(--astro-code-token-constant)">children</span><span style="color:var(--astro-code-token-function)">.forEach</span><span style="color:var(--astro-code-foreground)">(child </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">      this</span><span style="color:var(--astro-code-token-function)">.render</span><span style="color:var(--astro-code-foreground)">(child</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> dom)</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    );</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    container</span><span style="color:var(--astro-code-token-function)">.appendChild</span><span style="color:var(--astro-code-foreground)">(dom);</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  }</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">};</span></span></code></pre>
+<p><strong>遇到的问题</strong>：</p>
+<ul>
+<li>如何处理函数组件？</li>
+<li>如何绑定事件？</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>通过递归处理函数组件。</li>
+<li>使用 <code>addEventListener</code> 绑定事件。</li>
+</ul>
+<hr/>
+<h3 id="23-状态管理"><strong>2.3 状态管理</strong></h3>
+<p>状态管理是 React 的另一个核心功能。我实现了 <code>useState</code> 来支持组件的状态管理。</p>
+<p><strong>实现思路</strong>：</p>
+<ul>
+<li>使用一个数组 <code>hooks</code> 来存储状态。</li>
+<li>通过 <code>hookIndex</code> 跟踪当前 Hook 的索引。</li>
+<li>在状态更新时，触发重新渲染。</li>
+</ul>
+<p><strong>代码实现</strong>：</p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">let</span><span style="color:var(--astro-code-foreground)"> hookIndex </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> 0</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">let</span><span style="color:var(--astro-code-foreground)"> hooks </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> useState</span><span style="color:var(--astro-code-foreground)">(initial) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  const</span><span style="color:var(--astro-code-token-constant)"> currentIndex</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-foreground)"> hookIndex</span><span style="color:var(--astro-code-token-keyword)">++</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  hooks[currentIndex] </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)"> hooks[currentIndex] </span><span style="color:var(--astro-code-token-keyword)">||</span><span style="color:var(--astro-code-foreground)"> initial;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  function</span><span style="color:var(--astro-code-token-function)"> setState</span><span style="color:var(--astro-code-foreground)">(newState) {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    hooks[currentIndex] </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)"> newState;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">    scheduleRender</span><span style="color:var(--astro-code-foreground)">();</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> [hooks[currentIndex]</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> setState];</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> scheduleRender</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  if</span><span style="color:var(--astro-code-foreground)"> (</span><span style="color:var(--astro-code-token-keyword)">!</span><span style="color:var(--astro-code-foreground)">isRendering) {</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    isRendering </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> true</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-function)">    requestAnimationFrame</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">      document</span><span style="color:var(--astro-code-token-function)">.getElementById</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&quot;root&quot;</span><span style="color:var(--astro-code-foreground)">).innerHTML </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)"> &quot;&quot;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      hookIndex </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> 0</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">      ReactDOM</span><span style="color:var(--astro-code-token-function)">.render</span><span style="color:var(--astro-code-foreground)">(&lt;</span><span style="color:var(--astro-code-token-constant)">App</span><span style="color:var(--astro-code-foreground)"> /&gt;</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-constant)"> document</span><span style="color:var(--astro-code-token-function)">.getElementById</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&quot;root&quot;</span><span style="color:var(--astro-code-foreground)">));</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      isRendering </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> false</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    });</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  }</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<p><strong>遇到的问题</strong>：</p>
+<ul>
+<li>如何避免状态丢失？</li>
+<li>如何触发重新渲染？</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>使用 <code>hooks</code> 数组存储状态。</li>
+<li>通过 <code>scheduleRender</code> 触发重新渲染。</li>
+</ul>
+<hr/>
+<h3 id="24-支持-jsx-语法"><strong>2.4 支持 JSX 语法</strong></h3>
+<p>为了让代码更接近 React，我引入了 Babel 编译器来支持 JSX 语法。</p>
+<p><strong>实现思路</strong>：</p>
+<ul>
+<li>在 HTML 中引入 Babel 编译器。</li>
+<li>使用 <code>type=&quot;text/babel&quot;</code> 标记脚本。</li>
+</ul>
+<p><strong>代码实现</strong>：</p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="html"><code><span class="line"><span style="color:var(--astro-code-foreground)">&lt;</span><span style="color:var(--astro-code-token-string-expression)">script</span><span style="color:var(--astro-code-token-function)"> src</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&quot;https://unpkg.com/@babel/standalone/babel.min.js&quot;</span><span style="color:var(--astro-code-foreground)">&gt;&lt;/</span><span style="color:var(--astro-code-token-string-expression)">script</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">&lt;</span><span style="color:var(--astro-code-token-string-expression)">script</span><span style="color:var(--astro-code-token-function)"> type</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&quot;text/babel&quot;</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-comment)">  // JSX 代码</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">&lt;/</span><span style="color:var(--astro-code-token-string-expression)">script</span><span style="color:var(--astro-code-foreground)">&gt;</span></span></code></pre>
+<p><strong>遇到的问题</strong>：</p>
+<ul>
+<li>如何将 JSX 转换为 JavaScript？</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>使用 Babel 编译器自动转换 JSX。</li>
+</ul>
+<hr/>
+<h2 id="3-最终成果"><strong>3. 最终成果</strong></h2>
+<p>通过以上步骤，我成功实现了一个简化版的 React 框架，支持以下功能：</p>
+<ol>
+<li><strong>虚拟 DOM</strong>：创建和渲染虚拟 DOM。</li>
+<li><strong>状态管理</strong>：通过 <code>useState</code> 实现组件状态管理。</li>
+<li><strong>组件化开发</strong>：支持函数组件和 JSX 语法。</li>
+<li><strong>事件绑定</strong>：支持 <code>onClick</code> 等事件绑定。</li>
+</ol>
+<p>以下是一个简单的计数器组件示例：</p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> Counter</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  const</span><span style="color:var(--astro-code-foreground)"> [</span><span style="color:var(--astro-code-token-constant)">count</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-constant)"> setCount</span><span style="color:var(--astro-code-foreground)">] </span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-constant)"> React</span><span style="color:var(--astro-code-token-function)">.useState</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-constant)">0</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> (</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;</span><span style="color:var(--astro-code-token-string-expression)">h1</span><span style="color:var(--astro-code-token-function)"> style</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{{ color</span><span style="color:var(--astro-code-token-keyword)">:</span><span style="color:var(--astro-code-token-string-expression)"> &quot;blue&quot;</span><span style="color:var(--astro-code-foreground)">}}&gt;Count: {count}&lt;/</span><span style="color:var(--astro-code-token-string-expression)">h1</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;</span><span style="color:var(--astro-code-token-string-expression)">button</span><span style="color:var(--astro-code-token-function)"> className</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&#39;btn&#39;</span><span style="color:var(--astro-code-token-function)"> onClick</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-function)"> setCount</span><span style="color:var(--astro-code-foreground)">(count </span><span style="color:var(--astro-code-token-keyword)">+</span><span style="color:var(--astro-code-token-constant)"> 1</span><span style="color:var(--astro-code-foreground)">)}&gt;+&lt;/</span><span style="color:var(--astro-code-token-string-expression)">button</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;</span><span style="color:var(--astro-code-token-string-expression)">button</span><span style="color:var(--astro-code-token-function)"> className</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&#39;btn&#39;</span><span style="color:var(--astro-code-token-function)"> onClick</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-function)"> setCount</span><span style="color:var(--astro-code-foreground)">(count </span><span style="color:var(--astro-code-token-keyword)">-</span><span style="color:var(--astro-code-token-constant)"> 1</span><span style="color:var(--astro-code-foreground)">)}&gt;-&lt;/</span><span style="color:var(--astro-code-token-string-expression)">button</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;/</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  );</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> App</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> &lt;</span><span style="color:var(--astro-code-token-constant)">Counter</span><span style="color:var(--astro-code-foreground)"> /&gt;;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">ReactDOM</span><span style="color:var(--astro-code-token-function)">.render</span><span style="color:var(--astro-code-foreground)">(&lt;</span><span style="color:var(--astro-code-token-constant)">App</span><span style="color:var(--astro-code-foreground)"> /&gt;</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-constant)"> document</span><span style="color:var(--astro-code-token-function)">.getElementById</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;root&#39;</span><span style="color:var(--astro-code-foreground)">));</span></span></code></pre>
+<hr/>
+<h2 id="4-总结与收获"><strong>4. 总结与收获</strong></h2>
+<p>通过这次实现，我深入理解了 React 的核心原理，包括虚拟 DOM、状态管理、组件化开发等。以下是我的几点收获：</p>
+<ol>
+<li><strong>虚拟 DOM 的优势</strong>：通过虚拟 DOM，可以减少直接操作真实 DOM 的开销，提升性能。</li>
+<li><strong>状态管理的实现</strong>：状态管理的核心在于如何高效地更新状态并触发重新渲染。</li>
+<li><strong>组件化开发的意义</strong>：组件化开发可以提高代码的复用性和可维护性。</li>
+</ol>
+<p>如果你也对 React 的底层原理感兴趣，不妨尝试从零实现一个简化版的 React。相信你会有很多收获！</p>
+<hr/>
+<p><strong>GitHub 源码</strong>：<a href="https://github.com/Muliminty/demo/blob/main/single-file/mini-react.html">Mini React 实现</a></p>
+<p>希望这篇博客对你有所帮助！如果你有任何问题或建议，欢迎在评论区留言讨论。</p> <div class="mt-24"> <div class="grid grid-cols-2 gap-1.5 sm:gap-3"> <div class="invisible"></div> <a href="/blog/00-micro-changelog" class="group relative flex flex-grow flex-row-reverse flex-nowrap rounded-lg border border-black/15 px-4 py-4 pr-10 no-underline transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute right-2 top-1/2 size-5 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-3 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="-translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="flex items-center text-sm">Everything new in Muliminty Blog.</div> </a> </div> </div> <div class="mt-24"> <div class="giscus"></div> <script data-astro-rerun src="https://giscus.app/client.js" data-repo="Muliminty/giscus-database" data-repo-id="R_kgDONuUyXA" data-category="muliminty-blog" data-category-id="DIC_kwDONuUyXM4CmRAs" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="en" data-loading="lazy" crossorigin="anonymous" async></script> </div> </article> </div>  </main> <footer class="animate"> <div class="mx-auto max-w-screen-sm px-3"> <div class="relative"> <div class="absolute -top-12 right-0"> <button id="back-to-top" class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm">回到顶部</div> </button> </div> </div> <div class="flex items-center justify-between"> <div>&copy; 2025 • Muliminty Blog. 🔬</div> <div class="flex flex-wrap items-center gap-1.5"> <button id="light-theme-button" aria-label="Light theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <circle cx="12" cy="12" r="5"></circle> <line x1="12" y1="1" x2="12" y2="3"></line> <line x1="12" y1="21" x2="12" y2="23"></line> <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line> <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line> <line x1="1" y1="12" x2="3" y2="12"></line> <line x1="21" y1="12" x2="23" y2="12"></line> <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line> <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line> </svg> </button> <button id="dark-theme-button" aria-label="Dark theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path> </svg> </button> <button id="system-theme-button" aria-label="System theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect> <line x1="8" y1="21" x2="16" y2="21"></line> <line x1="12" y1="17" x2="12" y2="21"></line> </svg> </button> </div> </div> </div> </footer> <aside data-pagefind-ignore> <div id="backdrop" class="bg-[rgba(0, 0, 0, 0.5] invisible fixed left-0 top-0 z-50 flex h-screen w-full justify-center p-6 backdrop-blur-sm" data-astro-transition-persist="astro-3snakcvo-2"> <div id="pagefind-container" class="m-0 flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 bg-neutral-100 p-2 px-4 py-3 shadow-lg dark:border-white/20 dark:bg-neutral-900"> <div id="search" class="pagefind-ui pagefind-init" data-pagefind-ui data-bundle-path="/pagefind/" data-ui-options="{&#34;showImages&#34;:false,&#34;excerptLength&#34;:15,&#34;resetStyles&#34;:false}"></div> <script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.BoThSDgl.js"></script> <div class="mr-2 pb-1 pt-4 text-right text-xs dark:prose-invert">
+Press <span class="prose text-xs dark:prose-invert"><kbd class="">Esc</kbd></span> or click anywhere to close
+</div> </div> </div> </aside> <script>
+  const magnifyingGlass = document.getElementById("magnifying-glass");
+  const backdrop = document.getElementById("backdrop");
+
+  function openPagefind() {
+    const searchDiv = document.getElementById("search");
+    const search = searchDiv.querySelector("input");
+    setTimeout(() => {
+      search.focus();
+    }, 0);
+    backdrop?.classList.remove("invisible");
+    backdrop?.classList.add("visible");
+  }
+
+  function closePagefind() {
+    const search = document.getElementById("search");
+    search.value = "";
+    backdrop?.classList.remove("visible");
+    backdrop?.classList.add("invisible");
+  }
+
+  // open pagefind
+  magnifyingGlass?.addEventListener("click", () => {
+    openPagefind();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/") {
+      e.preventDefault();
+      openPagefind();
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      openPagefind();
+    }
+  });
+
+  // close pagefind
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closePagefind();
+    }
+  });
+
+  // close pagefind when searched result(link) clicked
+  document.addEventListener("click", (event) => {
+    if (event.target.classList.contains("pagefind-ui__result-link")) {
+      closePagefind();
+    }
+  });
+
+  backdrop?.addEventListener("click", (event) => {
+    if (!event.target.closest("#pagefind-container")) {
+      closePagefind();
+    }
+  });
+
+  // prevent form submission
+  const form = document.getElementById("form");
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+  });
+</script>  </body></html>

@@ -1,11 +1,11 @@
 {
   "servers": [
     {
-      "port": 3000,
+      "port": 9000,
       "directory": "dist/muliminty-blog"
     },
     {
-      "port": 3001,
+      "port": 9001,
       "directory": "dist/react-idea"
     }
   ]
