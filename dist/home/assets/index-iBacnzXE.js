@@ -1,0 +1,1 @@
+import{c as s,j as m}from"./index-main-Dttrhsno.js";const h="_theme_4csd8_1",c={theme:h},n=()=>{const{theme:e,toggleTheme:t}=s();return m.jsx("div",{className:c.theme,onClick:t,children:e==="light"?"🌑":"☀️"})};export{n as T};

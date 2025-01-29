@@ -1,6 +1,10 @@
 {
   "servers": [
     {
+      "port": 80,
+      "directory": "dist/home"
+    },
+    {
       "port": 9000,
       "directory": "dist/muliminty-blog"
     },
