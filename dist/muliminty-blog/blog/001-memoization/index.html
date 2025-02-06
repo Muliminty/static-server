@@ -1,0 +1,391 @@
+<!DOCTYPE html><html lang="en"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>"><meta name="generator" content="Astro v5.1.5"><!-- Canonical URL --><link rel="canonical" href="https://astro-micro.vercel.app/blog/001-memoization/"><!-- Primary Meta Tags --><title>掌握 React 性能优化：运用 memoization 技术与代码分割提升效率 | Muliminty Blog.</title><meta name="title" content="掌握 React 性能优化：运用 memoization 技术与代码分割提升效率 | Muliminty Blog."><meta name="description" content="React 是一个强大的用于构建用户界面的库，但随着应用的增长，性能问题可能会出现。在本文中，我们将探讨如何使用 memoization 技术和代码分割来优化 React 应用程序，提高效率和用户体验。"><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://astro-micro.vercel.app/blog/001-memoization/"><meta property="og:title" content="掌握 React 性能优化：运用 memoization 技术与代码分割提升效率 | Muliminty Blog."><meta property="og:description" content="React 是一个强大的用于构建用户界面的库，但随着应用的增长，性能问题可能会出现。在本文中，我们将探讨如何使用 memoization 技术和代码分割来优化 React 应用程序，提高效率和用户体验。"><meta property="og:image" content="https://astro-micro.vercel.app/blog-placeholder-1.jpg"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://astro-micro.vercel.app/blog/001-memoization/"><meta property="twitter:title" content="掌握 React 性能优化：运用 memoization 技术与代码分割提升效率 | Muliminty Blog."><meta property="twitter:description" content="React 是一个强大的用于构建用户界面的库，但随着应用的增长，性能问题可能会出现。在本文中，我们将探讨如何使用 memoization 技术和代码分割来优化 React 应用程序，提高效率和用户体验。"><meta property="twitter:image" content="https://astro-micro.vercel.app/blog-placeholder-1.jpg"><!-- PageFind --><link href="/pagefind/pagefind-ui.css" rel="stylesheet"><script src="/pagefind/pagefind-ui.js"></script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BScVxmeO.js"></script><script>
+  function init() {
+    preloadTheme();
+    onScroll();
+    animate();
+    updateThemeButtons();
+    addCopyCodeButtons();
+    setGiscusTheme();
+
+    const backToTop = document.getElementById("back-to-top");
+    backToTop?.addEventListener("click", (event) => scrollToTop(event));
+
+    const backToPrev = document.getElementById("back-to-prev");
+    backToPrev?.addEventListener("click", () => window.history.back());
+
+    const lightThemeButton = document.getElementById("light-theme-button");
+    lightThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "light");
+      toggleTheme(false);
+      updateThemeButtons();
+    });
+
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    darkThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "dark");
+      toggleTheme(true);
+      updateThemeButtons();
+    });
+
+    const systemThemeButton = document.getElementById("system-theme-button");
+    systemThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "system");
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      updateThemeButtons();
+    });
+
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (event) => {
+        if (localStorage.theme === "system") {
+          toggleTheme(event.matches);
+        }
+      });
+
+    document.addEventListener("scroll", onScroll);
+  }
+
+  function updateThemeButtons() {
+    const theme = localStorage.getItem("theme");
+    const lightThemeButton = document.getElementById("light-theme-button");
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    const systemThemeButton = document.getElementById("system-theme-button");
+
+    function removeActiveButtonTheme(button) {
+      button?.classList.remove("bg-black/5");
+      button?.classList.remove("dark:bg-white/5");
+    }
+
+    function addActiveButtonTheme(button) {
+      button?.classList.add("bg-black/5");
+      button?.classList.add("dark:bg-white/5");
+    }
+
+    removeActiveButtonTheme(lightThemeButton);
+    removeActiveButtonTheme(darkThemeButton);
+    removeActiveButtonTheme(systemThemeButton);
+
+    if (theme === "light") {
+      addActiveButtonTheme(lightThemeButton);
+    } else if (theme === "dark") {
+      addActiveButtonTheme(darkThemeButton);
+    } else {
+      addActiveButtonTheme(systemThemeButton);
+    }
+  }
+
+  function animate() {
+    const animateElements = document.querySelectorAll(".animate");
+
+    animateElements.forEach((element, index) => {
+      setTimeout(() => {
+        element.classList.add("show");
+      }, index * 100);
+    });
+  }
+
+  function onScroll() {
+    if (window.scrollY > 0) {
+      document.documentElement.classList.add("scrolled");
+    } else {
+      document.documentElement.classList.remove("scrolled");
+    }
+  }
+
+  function scrollToTop(event) {
+    event.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function toggleTheme(dark) {
+    const css = document.createElement("style");
+
+    css.appendChild(
+      document.createTextNode(
+        `* {
+             -webkit-transition: none !important;
+             -moz-transition: none !important;
+             -o-transition: none !important;
+             -ms-transition: none !important;
+             transition: none !important;
+          }
+        `
+      )
+    );
+
+    document.head.appendChild(css);
+
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    window.getComputedStyle(css).opacity;
+    document.head.removeChild(css);
+
+    setGiscusTheme();
+  }
+
+  function preloadTheme() {
+    const userTheme = localStorage.theme;
+
+    if (userTheme === "light" || userTheme === "dark") {
+      toggleTheme(userTheme === "dark");
+    } else {
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+  }
+
+  function addCopyCodeButtons() {
+    let copyButtonLabel = "📋";
+    let codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    async function copyCode(codeBlock, copyButton) {
+      const codeText = codeBlock.innerText;
+      const buttonText = copyButton.innerText;
+      const textToCopy = codeText.replace(buttonText, "");
+
+      await navigator.clipboard.writeText(textToCopy);
+      copyButton.innerText = "✅";
+
+      setTimeout(() => {
+        copyButton.innerText = copyButtonLabel;
+      }, 2000);
+    }
+
+    for (let codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const copyButton = document.createElement("button");
+      copyButton.innerText = copyButtonLabel;
+      copyButton.classList = "copy-code";
+
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock.parentNode.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton?.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+  }
+
+  const setGiscusTheme = () => {
+    const giscus = document.querySelector(".giscus-frame");
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    if (giscus) {
+      const url = new URL(giscus.src);
+      url.searchParams.set("theme", isDark ? "dark" : "light");
+      giscus.src = url.toString();
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", () => init());
+  document.addEventListener("astro:after-swap", () => init());
+  preloadTheme();
+</script><link rel="stylesheet" href="/_astro/_id_.D8mQGJwG.css">
+<style>summary[data-astro-cid-xvrfupwn]{cursor:pointer;border-top-left-radius:.5rem;border-top-right-radius:.5rem;padding:.375rem .75rem;font-weight:500;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}summary[data-astro-cid-xvrfupwn]:hover{background-color:#0000000d}summary[data-astro-cid-xvrfupwn]:hover:is(.dark *){background-color:#ffffff0d}details[data-astro-cid-xvrfupwn][open] summary[data-astro-cid-xvrfupwn]{background-color:#0000000d}details[data-astro-cid-xvrfupwn][open] summary[data-astro-cid-xvrfupwn]:is(.dark *){background-color:#ffffff0d}
+</style></head> <body> <header data-astro-transition-persist="astro-l7r54iwe-1"> <div class="mx-auto max-w-screen-sm px-3"> <div class="flex flex-wrap justify-between gap-y-2"> <a href="/" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out">  <div class="font-semibold"> Muliminty Blog.&nbsp;🔬
+</div>  </a> <nav class="flex items-center gap-1 text-sm"> <a href="/blog" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> blog </a> <span> / </span> <a href="/tags" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> tags </a> <!-- <Link href="/projects">projects</Link> --> <span> <!-- {`/`} --> </span> <!-- <button
+          id="magnifying-glass"
+          aria-label="Search"
+          class="flex items-center rounded border border-black/15 bg-neutral-100 px-2 py-1 text-xs transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:bg-neutral-900 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
+        >
+          <svg
+            height="16"
+            stroke-linejoin="round"
+            viewBox="0 0 16 16"
+            width="16"
+            style="color: currentcolor;"
+            ><path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3.5 7C3.5 5.067 5.067 3.5 7 3.5C8.933 3.5 10.5 5.067 10.5 7C10.5 7.88461 10.1718 8.69256 9.63058 9.30876L9.30876 9.63058C8.69256 10.1718 7.88461 10.5 7 10.5C5.067 10.5 3.5 8.933 3.5 7ZM9.96544 11.0261C9.13578 11.6382 8.11014 12 7 12C4.23858 12 2 9.76142 2 7C2 4.23858 4.23858 2 7 2C9.76142 2 12 4.23858 12 7C12 8.11014 11.6382 9.13578 11.0261 9.96544L14.0303 12.9697L14.5607 13.5L13.5 14.5607L12.9697 14.0303L9.96544 11.0261Z"
+              fill="currentColor"></path></svg
+          >
+          &nbsp;Search
+        </button> --> </nav> </div> </div> </header> <main>  <div class="mx-auto max-w-screen-sm px-3"> <div class="animate"> <a href="/blog" class="not-prose group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-7 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm"> Back to blog </div> </a> </div> <div class="my-10 space-y-1"> <div class="animate flex items-center gap-1.5"> <div class="font-base text-sm"> <time datetime="2025-02-05T00:00:00.000Z"> 2025年2月05日 </time> </div>
+&bull;
+<div class="font-base text-sm"> 2 分钟阅读 </div> </div> <h1 class="animate text-3xl font-semibold text-black dark:text-white"> 掌握 React 性能优化：运用 memoization 技术与代码分割提升效率 </h1> <div class="animate flex gap-2 pt-1"> <a href="/tags/react" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> react </a><a href="/tags/memoization" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> memoization </a><a href="/tags/性能优化" class="rounded border border-black/15 px-2 py-1 text-sm transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> 性能优化 </a> </div> </div> <details open class="animate rounded-lg border border-black/15 dark:border-white/20" data-astro-cid-xvrfupwn> <summary data-astro-cid-xvrfupwn>Table of Contents</summary> <nav class="" data-astro-cid-xvrfupwn> <ul class="py-3" data-astro-cid-xvrfupwn> <li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#1-了解-react-性能问题" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 1. 了解 React 性能问题 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#2-react-中的-memoization-技术" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2. React 中的 memoization 技术 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#21-reactmemo" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.1 React.memo </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#22-usememo" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.2 useMemo </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#23-usecallback" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 2.3 useCallback </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#3-react-中的代码分割" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 3. React 中的代码分割 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#31-reactlazy-和-suspense" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 3.1 React.lazy 和 Suspense </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#32-按路由进行代码分割" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 3.2 按路由进行代码分割 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#4-react-性能优化的最佳实践" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 4. React 性能优化的最佳实践 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#5-react-优化工具" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 5. React 优化工具 </a>  </li><li class="list-inside list-disc px-6 py-1.5 text-sm"> <a href="#6-结论" target="_self" class="inline-block decoration-black/30 dark:decoration-white/30 hover:decoration-black/50 focus-visible:decoration-black/50 dark:hover:decoration-white/50 dark:focus-visible:decoration-white/50 text-current hover:text-black focus-visible:text-black dark:hover:text-white dark:focus-visible:text-white transition-colors duration-300 ease-in-out underline underline-offset-[3px]"> 6. 结论 </a>  </li> </ul> </nav> </details> <article class="animate"> <p>React 是一个强大的用于构建用户界面的库，但随着应用的增长，性能问题可能会出现。在本文中，我们将探讨如何使用 memoization 技术和代码分割来优化 React 应用程序，提高效率和用户体验。</p>
+<h2 id="1-了解-react-性能问题">1. 了解 React 性能问题</h2>
+<p>React 应用程序可能会遇到性能瓶颈，这主要是由于不必要的重新渲染和过大的打包文件导致的。当组件的状态或 props 没有改变时，不必要的重新渲染会浪费计算资源。而过大的打包文件会减慢应用的初始加载时间，特别是在网络连接较慢的设备上。</p>
+<h2 id="2-react-中的-memoization-技术">2. React 中的 memoization 技术</h2>
+<p>memoization 是一种通过缓存昂贵函数调用的结果并在相同输入再次出现时重用它们来优化性能的技术。React 提供了多种实现 memoization 的方法：</p>
+<h2 id="21-reactmemo">2.1 React.memo</h2>
+<p><code>React.memo</code> 是一个高阶组件，它防止函数组件在 props 没有改变时重新渲染。这对于不需要频繁更新的昂贵渲染组件非常有用。</p>
+<p><strong>示例：</strong></p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> React</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> { memo } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> MyComponent</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-function)"> memo</span><span style="color:var(--astro-code-foreground)">(({ value }) </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">  console</span><span style="color:var(--astro-code-token-function)">.log</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;MyComponent rendered&#39;</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> &lt;</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;{value}&lt;/</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">});</span></span></code></pre>
+<h2 id="22-usememo">2.2 useMemo</h2>
+<p><code>useMemo</code> 钩子允许你缓存昂贵计算的结果。只有当依赖项发生变化时，它才会重新计算缓存的值。</p>
+<p><strong>示例：</strong></p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> React</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> { useMemo } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> ExpensiveComponent</span><span style="color:var(--astro-code-foreground)">({ data }) {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  const</span><span style="color:var(--astro-code-token-constant)"> computedValue</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-function)"> useMemo</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    console</span><span style="color:var(--astro-code-token-function)">.log</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;Expensive calculation performed&#39;</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">    return</span><span style="color:var(--astro-code-token-constant)"> data</span><span style="color:var(--astro-code-token-function)">.reduce</span><span style="color:var(--astro-code-foreground)">((sum</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> value) </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> sum </span><span style="color:var(--astro-code-token-keyword)">+</span><span style="color:var(--astro-code-foreground)"> value</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-token-constant)"> 0</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  }</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> [data]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> &lt;</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;{computedValue}&lt;/</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<h2 id="23-usecallback">2.3 useCallback</h2>
+<p><code>useCallback</code> 钩子缓存回调函数，防止它们在每次渲染时被重新创建。这对于传递给优化子组件的回调函数特别有用。</p>
+<p><strong>示例：</strong></p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> React</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> { useCallback } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> App</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  const</span><span style="color:var(--astro-code-token-constant)"> memoizedHandler</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-function)"> useCallback</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-foreground)"> {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-constant)">    console</span><span style="color:var(--astro-code-token-function)">.log</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;Button clicked!&#39;</span><span style="color:var(--astro-code-foreground)">);</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  }</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> []);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> &lt;</span><span style="color:var(--astro-code-token-constant)">Button</span><span style="color:var(--astro-code-token-function)"> handleClick</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{memoizedHandler} /&gt;;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<h2 id="3-react-中的代码分割">3. React 中的代码分割</h2>
+<p>代码分割是一种将应用拆分成较小的块的技术，这些块可以按需加载。这减少了初始加载时间，提高了性能。</p>
+<h2 id="31-reactlazy-和-suspense">3.1 React.lazy 和 Suspense</h2>
+<p>React 提供了 <code>React.lazy</code> 和 <code>Suspense</code> 用于懒加载组件。<code>React.lazy</code> 允许你动态导入组件，而 <code>Suspense</code> 在组件加载时显示一个后备 UI。</p>
+<p><strong>示例：</strong></p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> React</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> { lazy</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> Suspense } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> LazyComponent</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-function)"> lazy</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-keyword)"> import</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;./LazyComponent&#39;</span><span style="color:var(--astro-code-foreground)">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> App</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> (</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;</span><span style="color:var(--astro-code-token-constant)">Suspense</span><span style="color:var(--astro-code-token-function)"> fallback</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{&lt;</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;Loading...&lt;/</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;}&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;</span><span style="color:var(--astro-code-token-constant)">LazyComponent</span><span style="color:var(--astro-code-foreground)"> /&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;/</span><span style="color:var(--astro-code-token-constant)">Suspense</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  );</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<h2 id="32-按路由进行代码分割">3.2 按路由进行代码分割</h2>
+<p>对于大型应用，按路由进行代码分割是一种有效的性能提升方法。像 <code>React Router</code> 这样的库使得这个过程变得简单。</p>
+<p><strong>示例：</strong></p>
+<pre class="astro-code css-variables" style="background-color:var(--astro-code-background);color:var(--astro-code-foreground);overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> React</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> { Suspense } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">import</span><span style="color:var(--astro-code-foreground)"> { BrowserRouter </span><span style="color:var(--astro-code-token-keyword)">as</span><span style="color:var(--astro-code-foreground)"> Router</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> Route</span><span style="color:var(--astro-code-token-punctuation)">,</span><span style="color:var(--astro-code-foreground)"> Switch } </span><span style="color:var(--astro-code-token-keyword)">from</span><span style="color:var(--astro-code-token-string-expression)"> &#39;react-router-dom&#39;</span><span style="color:var(--astro-code-foreground)">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> Home</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> React</span><span style="color:var(--astro-code-token-function)">.lazy</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-keyword)"> import</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;./Home&#39;</span><span style="color:var(--astro-code-foreground)">));</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> About</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> React</span><span style="color:var(--astro-code-token-function)">.lazy</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-keyword)"> import</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;./About&#39;</span><span style="color:var(--astro-code-foreground)">));</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">const</span><span style="color:var(--astro-code-token-constant)"> Contact</span><span style="color:var(--astro-code-token-keyword)"> =</span><span style="color:var(--astro-code-token-constant)"> React</span><span style="color:var(--astro-code-token-function)">.lazy</span><span style="color:var(--astro-code-foreground)">(() </span><span style="color:var(--astro-code-token-keyword)">=&gt;</span><span style="color:var(--astro-code-token-keyword)"> import</span><span style="color:var(--astro-code-foreground)">(</span><span style="color:var(--astro-code-token-string-expression)">&#39;./Contact&#39;</span><span style="color:var(--astro-code-foreground)">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">function</span><span style="color:var(--astro-code-token-function)"> App</span><span style="color:var(--astro-code-foreground)">() {</span></span>
+<span class="line"><span style="color:var(--astro-code-token-keyword)">  return</span><span style="color:var(--astro-code-foreground)"> (</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;</span><span style="color:var(--astro-code-token-constant)">Router</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;</span><span style="color:var(--astro-code-token-constant)">Suspense</span><span style="color:var(--astro-code-token-function)"> fallback</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{&lt;</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;Loading...&lt;/</span><span style="color:var(--astro-code-token-string-expression)">div</span><span style="color:var(--astro-code-foreground)">&gt;}&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">        &lt;</span><span style="color:var(--astro-code-token-constant)">Switch</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">          &lt;</span><span style="color:var(--astro-code-token-constant)">Route</span><span style="color:var(--astro-code-token-function)"> exact</span><span style="color:var(--astro-code-token-function)"> path</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&quot;/&quot;</span><span style="color:var(--astro-code-token-function)"> component</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{Home} /&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">          &lt;</span><span style="color:var(--astro-code-token-constant)">Route</span><span style="color:var(--astro-code-token-function)"> path</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&quot;/about&quot;</span><span style="color:var(--astro-code-token-function)"> component</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{About} /&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">          &lt;</span><span style="color:var(--astro-code-token-constant)">Route</span><span style="color:var(--astro-code-token-function)"> path</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-token-string-expression)">&quot;/contact&quot;</span><span style="color:var(--astro-code-token-function)"> component</span><span style="color:var(--astro-code-token-keyword)">=</span><span style="color:var(--astro-code-foreground)">{Contact} /&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">        &lt;/</span><span style="color:var(--astro-code-token-constant)">Switch</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">      &lt;/</span><span style="color:var(--astro-code-token-constant)">Suspense</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">    &lt;/</span><span style="color:var(--astro-code-token-constant)">Router</span><span style="color:var(--astro-code-foreground)">&gt;</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">  );</span></span>
+<span class="line"><span style="color:var(--astro-code-foreground)">}</span></span></code></pre>
+<h2 id="4-react-性能优化的最佳实践">4. React 性能优化的最佳实践</h2>
+<ul>
+<li>
+<p><strong>避免内联函数和对象：</strong> 内联函数和对象在每次渲染时都会创建新的引用，导致不必要的重新渲染。使用 <code>useCallback</code> 和 <code>useMemo</code> 来缓存它们。</p>
+</li>
+<li>
+<p><strong>优化状态管理：</strong> 将状态保持在尽可能靠近其使用的地方。避免将状态提升到组件树中，除非必要。</p>
+</li>
+<li>
+<p><strong>高效列表渲染：</strong> 确保 key 属性是唯一且稳定的，以避免不必要的 DOM 操作。使用像 <code>react-window</code> 这样的库来高效渲染大列表。</p>
+</li>
+<li>
+<p><strong>使用防抖和节流：</strong> 使用像 Lodash 这样的工具对昂贵操作（如滚动、输入或调整大小）进行防抖或节流。</p>
+</li>
+<li>
+<p><strong>最小化第三方依赖：</strong> 限制使用重型库，并确保所有依赖都是必要的。使用工具如 <code>Webpack Bundle Analyzer</code> 来审核你的打包大小。</p>
+</li>
+</ul>
+<h2 id="5-react-优化工具">5. React 优化工具</h2>
+<ul>
+<li>
+<p><strong>React DevTools：</strong> 使用性能分析工具来识别性能瓶颈。</p>
+</li>
+<li>
+<p><strong>Why Did You Render：</strong> 查找应用中不必要的重新渲染。</p>
+</li>
+<li>
+<p><strong>Bundlephobia：</strong> 在添加依赖之前分析其大小和影响。</p>
+</li>
+</ul>
+<h2 id="6-结论">6. 结论</h2>
+<p>优化 React 应用程序需要采用智能策略，如组件 memoization、懒加载、状态管理和性能分析。这些实践不仅提升了用户体验，还提高了开发效率。通过将这些技术融入你的工作流程，你就能更好地构建高性能的 React 应用。</p>
+<p>对于进一步阅读，可以探索 React 文档中的性能优化部分，或者在评论中分享你最喜欢的 React 优化技巧！</p> <div class="mt-24"> <div class="grid grid-cols-2 gap-1.5 sm:gap-3"> <div class="invisible"></div> <a href="/blog/000-react" class="group relative flex flex-grow flex-row-reverse flex-nowrap rounded-lg border border-black/15 px-4 py-4 pr-10 no-underline transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute right-2 top-1/2 size-5 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-3 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="-translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="flex items-center text-sm">从零实现一个简化版 React</div> </a> </div> </div> <div class="mt-24"> <div class="giscus"></div> <script data-astro-rerun src="https://giscus.app/client.js" data-repo="Muliminty/giscus-database" data-repo-id="R_kgDONuUyXA" data-category="muliminty-blog" data-category-id="DIC_kwDONuUyXM4CmRAs" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="en" data-loading="lazy" crossorigin="anonymous" async></script> </div> </article> </div>  </main> <footer class="animate"> <div class="mx-auto max-w-screen-sm px-3"> <div class="relative"> <div class="absolute -top-12 right-0"> <button id="back-to-top" class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm">回到顶部</div> </button> </div> </div> <div class="flex items-center justify-between"> <div>&copy; 2025 • Muliminty Blog. 🔬</div> <div class="flex flex-wrap items-center gap-1.5"> <button id="light-theme-button" aria-label="Light theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <circle cx="12" cy="12" r="5"></circle> <line x1="12" y1="1" x2="12" y2="3"></line> <line x1="12" y1="21" x2="12" y2="23"></line> <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line> <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line> <line x1="1" y1="12" x2="3" y2="12"></line> <line x1="21" y1="12" x2="23" y2="12"></line> <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line> <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line> </svg> </button> <button id="dark-theme-button" aria-label="Dark theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path> </svg> </button> <button id="system-theme-button" aria-label="System theme" class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="transition-colors duration-300 ease-in-out group-hover:animate-pulse group-hover:stroke-black group-focus-visible:animate-pulse group-focus-visible:stroke-black group-hover:dark:stroke-white dark:group-focus-visible:stroke-white"> <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect> <line x1="8" y1="21" x2="16" y2="21"></line> <line x1="12" y1="17" x2="12" y2="21"></line> </svg> </button> </div> </div> </div> </footer> <aside data-pagefind-ignore> <div id="backdrop" class="bg-[rgba(0, 0, 0, 0.5] invisible fixed left-0 top-0 z-50 flex h-screen w-full justify-center p-6 backdrop-blur-sm" data-astro-transition-persist="astro-3snakcvo-2"> <div id="pagefind-container" class="m-0 flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 bg-neutral-100 p-2 px-4 py-3 shadow-lg dark:border-white/20 dark:bg-neutral-900"> <div id="search" class="pagefind-ui pagefind-init" data-pagefind-ui data-bundle-path="/pagefind/" data-ui-options="{&#34;showImages&#34;:false,&#34;excerptLength&#34;:15,&#34;resetStyles&#34;:false}"></div> <script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.BoThSDgl.js"></script> <div class="mr-2 pb-1 pt-4 text-right text-xs dark:prose-invert">
+Press <span class="prose text-xs dark:prose-invert"><kbd class="">Esc</kbd></span> or click anywhere to close
+</div> </div> </div> </aside> <script>
+  const magnifyingGlass = document.getElementById("magnifying-glass");
+  const backdrop = document.getElementById("backdrop");
+
+  function openPagefind() {
+    const searchDiv = document.getElementById("search");
+    const search = searchDiv.querySelector("input");
+    setTimeout(() => {
+      search.focus();
+    }, 0);
+    backdrop?.classList.remove("invisible");
+    backdrop?.classList.add("visible");
+  }
+
+  function closePagefind() {
+    const search = document.getElementById("search");
+    search.value = "";
+    backdrop?.classList.remove("visible");
+    backdrop?.classList.add("invisible");
+  }
+
+  // open pagefind
+  magnifyingGlass?.addEventListener("click", () => {
+    openPagefind();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/") {
+      e.preventDefault();
+      openPagefind();
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      openPagefind();
+    }
+  });
+
+  // close pagefind
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closePagefind();
+    }
+  });
+
+  // close pagefind when searched result(link) clicked
+  document.addEventListener("click", (event) => {
+    if (event.target.classList.contains("pagefind-ui__result-link")) {
+      closePagefind();
+    }
+  });
+
+  backdrop?.addEventListener("click", (event) => {
+    if (!event.target.closest("#pagefind-container")) {
+      closePagefind();
+    }
+  });
+
+  // prevent form submission
+  const form = document.getElementById("form");
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+  });
+</script>  </body></html>
