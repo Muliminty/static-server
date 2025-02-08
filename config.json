@@ -5,6 +5,10 @@
       "directory": "dist/home"
     },
     {
+      "port": 3001,
+      "directory": "dist/cv"
+    },
+    {
       "port": 9000,
       "directory": "dist/muliminty-blog"
     },
